@@ -208,4 +208,21 @@ public class VaultServiceTests
             () => b.ImportBackup("respaldo.vault", "incorrecta"));
         Assert.False(b.IsUnlocked);
     }
+
+    [Fact]
+    public async Task BloqueoPorInactividad_BloqueaLaBovedaSolo()
+    {
+        using var monitor = new InactivityMonitor(TimeSpan.FromMilliseconds(200));
+        var service = new VaultService(new AesGcmCryptoService(),
+                                       new InMemoryVaultRepository(),
+                                       iterations: 1000,
+                                       monitor: monitor);
+
+        service.CreateVault(Maestra);
+        Assert.True(service.IsUnlocked);
+
+        await Task.Delay(600);
+
+        Assert.False(service.IsUnlocked);
+    }
 }
