@@ -1,12 +1,136 @@
 ﻿<Window x:Class="PasswordManager.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:PasswordManager.App"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="Gestor de contraseñas" Height="520" Width="760"
+        MinHeight="480" MinWidth="640" FontSize="14"
+        WindowStartupLocation="CenterScreen"
+        PreviewKeyDown="Window_Activity" PreviewMouseDown="Window_Activity">
+
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="16">
+
+        <!-- ============ PANTALLA 1: ACCESO ============ -->
+        <StackPanel x:Name="LoginPanel" Width="340"
+                    VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="Gestor de contraseñas" FontSize="24" FontWeight="Bold" Margin="0,0,0,4"/>
+            <TextBlock x:Name="LoginSubtitle" Foreground="Gray" TextWrapping="Wrap" Margin="0,0,0,16"/>
+
+            <TextBlock Text="Contraseña maestra"/>
+            <PasswordBox x:Name="MasterBox" Margin="0,4,0,10" KeyDown="MasterBox_KeyDown"/>
+
+            <StackPanel x:Name="ConfirmPanel">
+                <TextBlock Text="Confirmar contraseña maestra"/>
+                <PasswordBox x:Name="ConfirmBox" Margin="0,4,0,10" KeyDown="MasterBox_KeyDown"/>
+            </StackPanel>
+
+            <Button x:Name="LoginButton" Click="Login_Click" Margin="0" HorizontalAlignment="Stretch"/>
+            <TextBlock x:Name="LoginError" Foreground="Firebrick" TextWrapping="Wrap" Margin="0,10,0,0"/>
+        </StackPanel>
+
+        <!-- ============ PANTALLA 2: LISTA DE ENTRADAS ============ -->
+        <Grid x:Name="ListPanel" Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <DockPanel Grid.Row="0" Margin="0,0,0,10">
+                <Button DockPanel.Dock="Right" Content="Bloquear" Click="Lock_Click" Margin="8,0,0,0"/>
+                <TextBlock DockPanel.Dock="Left" Text="Buscar:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBox x:Name="SearchBox" VerticalContentAlignment="Center"
+                         TextChanged="SearchBox_TextChanged"/>
+            </DockPanel>
+
+            <ListView x:Name="EntriesList" Grid.Row="1" MouseDoubleClick="EntriesList_DoubleClick">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Título" Width="220" DisplayMemberBinding="{Binding Title}"/>
+                        <GridViewColumn Header="Usuario" Width="240" DisplayMemberBinding="{Binding Username}"/>
+                        <GridViewColumn Header="Categoría" Width="150" DisplayMemberBinding="{Binding Category}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
+                <Button Content="Agregar" Click="Add_Click"/>
+                <Button Content="Editar" Click="Edit_Click"/>
+                <Button Content="Eliminar" Click="Delete_Click"/>
+                <Button Content="Copiar contraseña" Click="Copy_Click"/>
+            </StackPanel>
+
+            <TextBlock x:Name="StatusText" Grid.Row="3" Foreground="Gray"
+                       TextWrapping="Wrap" Margin="0,8,0,0"/>
+        </Grid>
+
+        <!-- ============ PANTALLA 3: EDITOR ============ -->
+        <Grid x:Name="EditorPanel" Visibility="Collapsed" MaxWidth="520" VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock x:Name="EditorTitle" Grid.Row="0" Grid.ColumnSpan="2"
+                       FontSize="20" FontWeight="Bold" Margin="0,0,0,12"/>
+
+            <TextBlock Grid.Row="1" Text="Título" VerticalAlignment="Center" Margin="0,0,0,8"/>
+            <TextBox x:Name="TitleBox" Grid.Row="1" Grid.Column="1" Margin="0,0,0,8"/>
+
+            <TextBlock Grid.Row="2" Text="Usuario" VerticalAlignment="Center" Margin="0,0,0,8"/>
+            <TextBox x:Name="UserBox" Grid.Row="2" Grid.Column="1" Margin="0,0,0,8"/>
+
+            <TextBlock Grid.Row="3" Text="URL" VerticalAlignment="Center" Margin="0,0,0,8"/>
+            <TextBox x:Name="UrlBox" Grid.Row="3" Grid.Column="1" Margin="0,0,0,8"/>
+
+            <TextBlock Grid.Row="4" Text="Categoría" VerticalAlignment="Center" Margin="0,0,0,8"/>
+            <TextBox x:Name="CategoryBox" Grid.Row="4" Grid.Column="1" Margin="0,0,0,8"/>
+
+            <TextBlock Grid.Row="5" Text="Contraseña" VerticalAlignment="Center" Margin="0,0,0,8"/>
+            <TextBox x:Name="EntryPassBox" Grid.Row="5" Grid.Column="1" Margin="0,0,0,8"
+                     FontFamily="Consolas" TextChanged="EntryPassBox_TextChanged"/>
+
+            <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,8">
+                <TextBlock Text="Longitud:" VerticalAlignment="Center"/>
+                <Slider x:Name="LengthSlider" Minimum="8" Maximum="32" Value="16" Width="110"
+                        IsSnapToTickEnabled="True" TickFrequency="1"
+                        VerticalAlignment="Center" Margin="8,0,4,0"/>
+                <TextBlock Text="{Binding Value, ElementName=LengthSlider, StringFormat=N0}"
+                           Width="24" VerticalAlignment="Center"/>
+                <Button Content="Generar" Click="Generate_Click"/>
+                <TextBlock x:Name="StrengthText" VerticalAlignment="Center" FontWeight="SemiBold"/>
+            </StackPanel>
+
+            <TextBlock Grid.Row="7" Text="Notas" Margin="0,4,0,8"/>
+            <TextBox x:Name="NotesBox" Grid.Row="7" Grid.Column="1" Height="70" Margin="0,0,0,8"
+                     AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+
+            <TextBlock x:Name="EditorError" Grid.Row="8" Grid.Column="1"
+                       Foreground="Firebrick" TextWrapping="Wrap" Margin="0,0,0,8"/>
+
+            <StackPanel Grid.Row="9" Grid.Column="1" Orientation="Horizontal">
+                <Button Content="Guardar" Click="Save_Click"/>
+                <Button Content="Cancelar" Click="Cancel_Click"/>
+            </StackPanel>
+        </Grid>
 
     </Grid>
 </Window>
