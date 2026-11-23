@@ -26,4 +26,18 @@ public class VaultTests
 
         Assert.Single(resultados);
     }
+
+    [Fact]
+    public void FindReusedPasswords_DetectaContrasenasRepetidas()
+    {
+        var vault = new Vault();
+        vault.AddEntry(new VaultEntry { Title = "Gmail", Password = "abc123" });
+        vault.AddEntry(new VaultEntry { Title = "Netflix", Password = "abc123" });
+        vault.AddEntry(new VaultEntry { Title = "Banco", Password = "otraClave!9" });
+
+        var grupos = vault.FindReusedPasswords();
+
+        Assert.Single(grupos);
+        Assert.Equal(2, grupos[0].Count);
+    }
 }
