@@ -14,6 +14,7 @@ public class VaultService
     private readonly ICryptoService _crypto;
     private readonly IVaultRepository _repository;
     private readonly int _iterationsForNewVaults;
+    private readonly InactivityMonitor? _monitor;          // NUEVO
 
     private Vault? _currentVault;
     private byte[]? _sessionKey;
@@ -21,11 +22,17 @@ public class VaultService
     private int _iterations;
 
     public VaultService(ICryptoService crypto, IVaultRepository repository,
-                        int iterations = DefaultIterations)
+                        int iterations = DefaultIterations,
+                        InactivityMonitor? monitor = null)  // NUEVO parámetro
     {
         _crypto = crypto;
         _repository = repository;
         _iterationsForNewVaults = iterations;
+        _monitor = monitor;                                 // NUEVO
+
+        // NUEVO: cuando el reloj llega a cero, se bloquea la bóveda
+        if (_monitor != null)
+            _monitor.TimeoutElapsed += (_, _) => Lock();
     }
 
     public bool IsUnlocked => _currentVault != null && _sessionKey != null;
@@ -46,6 +53,7 @@ public class VaultService
         _currentVault = new Vault();
 
         Persist();
+        _monitor?.Start();                                  // NUEVO
     }
 
     public void Unlock(string masterPassword)
@@ -58,10 +66,13 @@ public class VaultService
         _sessionKey = key;
         _salt = payload.Salt;
         _iterations = payload.Iterations;
+        _monitor?.Start();                                  // NUEVO
     }
 
     public void Lock()
     {
+        _monitor?.Stop();                                   // NUEVO
+
         if (_sessionKey != null)
             CryptographicOperations.ZeroMemory(_sessionKey); // borra la clave de la memoria
 
@@ -149,6 +160,7 @@ public class VaultService
         _iterations = payload.Iterations;
 
         Persist();
+        _monitor?.Start();                                  // NUEVO
     }
 
     // ---------- Métodos internos ----------
@@ -157,6 +169,8 @@ public class VaultService
     {
         if (!IsUnlocked)
             throw new InvalidOperationException("La bóveda está bloqueada.");
+
+        _monitor?.Reset();                                  // NUEVO: cuenta como actividad
     }
 
     private void Persist()
